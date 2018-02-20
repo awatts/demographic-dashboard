@@ -1,0 +1,180 @@
+---
+title: "Crosslinguisic Status"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: scroll
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(knitr)
+library(janitor)
+
+source('fetch_redcap_data.R')
+source('fetch_mturk_data.R')
+
+all_subjects <- bind_rows(crossling, mturk) %>% select(-record_id, -workerid)
+
+mexico_count <- 224
+local_field_max = 1400
+mturk_max = 18000
+```
+
+Overall Enrollment
+==================
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Sex
+```{r sex_summary_total}
+all_subjects %>%
+  tabyl(sex) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting() %>%
+  kable(format = "markdown")
+```
+
+### Race
+```{r race_summary_total}
+all_subjects %>%
+  tabyl(race) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting() %>%
+  kable(format = "markdown")
+```
+
+### Ethnicity
+```{r ethnicity_summary_total}
+all_subjects %>%
+  tabyl(ethnicity) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting() %>%
+  kable(format = "markdown")
+```
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Cummulative Enrollment
+```{r overall_enrollment}
+overall_rate <- nrow(crossling) + nrow(mturk) + mexico_count
+overall_max <- local_field_max + mturk_max + mexico_count
+# max should be number of allowed local subjects minus number run in mexico
+gauge(overall_rate, min = 0, max = overall_max, abbreviate = FALSE,
+      gaugeSectors(
+        success = c(0, overall_max / 2), warning = c((overall_max / 2)  + 1 , overall_max * 0.75 ), danger = c((overall_max * 0.75) + 1, overall_max)
+      ))
+```
+
+Local Enrollment
+================
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Sex
+```{r sex_summary_local}
+crossling %>%
+  tabyl(sex) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting() %>%
+  kable(format = "markdown")
+```
+
+### Race
+```{r race_summary_local}
+crossling %>%
+  tabyl(race) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting() %>%
+  kable(format = "markdown")
+```
+
+### Ethnicity
+```{r ethnicity_summary_local}
+crossling %>%
+  tabyl(ethnicity) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting() %>%
+  kable(format = "markdown")
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Cummulative Enrollment
+```{r in_lab_enrollment}
+lab_rate <- nrow(crossling)
+local_max <- local_field_max - mexico_count
+# max should be number of allowed local subjects minus number run in mexico
+gauge(lab_rate, min = 0, max = local_max, abbreviate = FALSE,
+      gaugeSectors(
+        success = c(0, local_max - 201), warning = c(local_max - 200, local_max - 101), danger = c(local_max - 100, local_max)
+      ))
+```
+
+
+Mexico Enrollment
+=================
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+#### Cummulative Enrollment
+```{r mexico_enrollment}
+# Mexican enrollment will not change
+gauge(mexico_count, min = 0, max = mexico_count, abbreviate = FALSE,
+      gaugeSectors(
+        success = c(0, 150), warning = c(151, 200), danger = c(200, mexico_count)
+      ))
+```
+
+
+MTurk Enrollment
+================
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Sex
+```{r sex_summary_mturk}
+mturk %>%
+  tabyl(sex) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting() %>%
+  kable(format = "markdown")
+```
+
+### Race
+```{r race_summary_mturk}
+mturk %>%
+  tabyl(race) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting() %>%
+  kable(format = "markdown")
+```
+
+### Ethnicity
+```{r ethnicity_summary_mturk}
+mturk %>%
+  tabyl(ethnicity) %>%
+  adorn_totals("row") %>%
+  adorn_pct_formatting() %>%
+  kable(format = "markdown")
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Cummulative Enrollment
+```{r mturk_enrollment}
+# max should be number of allowed mturk subjects
+mturk_rate <- nrow(mturk)
+gauge(mturk_rate, min = 0, max = mturk_max, abbreviate = FALSE,
+      gaugeSectors(
+        success = c(501, mturk_max), warning = c(301, 500), danger = c(0, 300)
+      ))
+```
