@@ -46,5 +46,6 @@ crossling <- import_df("CROSSLING_KEY") %>%
     ethnicity = case_when(
       is.na(ethnicity) ~ "Unknown or Not Reported",
       ethnicity == "Unknown / Not Reported" ~ "Unknown or Not Reported",
-      TRUE ~ ethnicity)
+      TRUE ~ ethnicity),
+    record_id = sprintf('lab%05d', record_id)
   )

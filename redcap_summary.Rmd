@@ -1,5 +1,6 @@
 ---
 title: "Crosslinguisic Status"
+runtime: shiny
 output:
   flexdashboard::flex_dashboard:
     orientation: columns
@@ -15,11 +16,13 @@ library(janitor)
 source('fetch_redcap_data.R')
 source('fetch_mturk_data.R')
 
-all_subjects <- bind_rows(crossling, mturk) %>% select(-record_id, -workerid)
+all_subjects <- bind_rows(crossling, mturk_surveys) # %>% select(-record_id, -workerid)
 
 mexico_count <- 224
 local_field_max = 1400
 mturk_max = 18000
+
+mturk_distinct <- nrow(mturk_surveys %>% select(record_id) %>% distinct())
 ```
 
 Overall Enrollment
@@ -30,6 +33,7 @@ Column {data-width=650}
 ### Sex
 ```{r sex_summary_total}
 all_subjects %>%
+  distinct(record_id, sex) %>%
   tabyl(sex) %>%
   adorn_totals("row") %>%
   adorn_pct_formatting() %>%
@@ -39,6 +43,7 @@ all_subjects %>%
 ### Race
 ```{r race_summary_total}
 all_subjects %>%
+  distinct(record_id, race) %>%
   tabyl(race) %>%
   adorn_totals("row") %>%
   adorn_pct_formatting() %>%
@@ -48,6 +53,7 @@ all_subjects %>%
 ### Ethnicity
 ```{r ethnicity_summary_total}
 all_subjects %>%
+  distinct(record_id, ethnicity) %>%
   tabyl(ethnicity) %>%
   adorn_totals("row") %>%
   adorn_pct_formatting() %>%
@@ -60,7 +66,7 @@ Column {data-width=350}
 
 ### Cummulative Enrollment
 ```{r overall_enrollment}
-overall_rate <- nrow(crossling) + nrow(mturk) + mexico_count
+overall_rate <- nrow(crossling) + mturk_distinct + mexico_count
 overall_max <- local_field_max + mturk_max + mexico_count
 # max should be number of allowed local subjects minus number run in mexico
 gauge(overall_rate, min = 0, max = overall_max, abbreviate = FALSE,
@@ -138,10 +144,13 @@ MTurk Enrollment
 ================
 Column {data-width=650}
 -----------------------------------------------------------------------
+Warning: Some workers have multiple conflicting surveys, so counts could
+exceed number of actual workers.
 
 ### Sex
 ```{r sex_summary_mturk}
-mturk %>%
+mturk_surveys %>%
+  distinct(sex, record_id) %>%
   tabyl(sex) %>%
   adorn_totals("row") %>%
   adorn_pct_formatting() %>%
@@ -150,7 +159,8 @@ mturk %>%
 
 ### Race
 ```{r race_summary_mturk}
-mturk %>%
+mturk_surveys %>%
+  distinct(race, record_id) %>%
   tabyl(race) %>%
   adorn_totals("row") %>%
   adorn_pct_formatting() %>%
@@ -159,7 +169,8 @@ mturk %>%
 
 ### Ethnicity
 ```{r ethnicity_summary_mturk}
-mturk %>%
+mturk_surveys %>%
+  distinct(ethnicity, record_id) %>%
   tabyl(ethnicity) %>%
   adorn_totals("row") %>%
   adorn_pct_formatting() %>%
@@ -172,8 +183,8 @@ Column {data-width=350}
 ### Cummulative Enrollment
 ```{r mturk_enrollment}
 # max should be number of allowed mturk subjects
-mturk_rate <- nrow(mturk)
-gauge(mturk_rate, min = 0, max = mturk_max, abbreviate = FALSE,
+
+gauge(mturk_distinct, min = 0, max = mturk_max, abbreviate = FALSE,
       gaugeSectors(
         success = c(501, mturk_max), warning = c(301, 500), danger = c(0, 300)
       ))
